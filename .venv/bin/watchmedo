@@ -1,4 +1,6 @@
-#!/home/daner/IMT/ArchiDistrib/S5-AD-RestAPI-TP1/.venv/bin/python3
+#!/bin/sh
+'''exec' "/home/boubast/Bureau/Architechture Distribué/Tuto_flask/S5-AD-RestAPI-TP1/.venv/bin/python3" "$0" "$@"
+' '''
 # -*- coding: utf-8 -*-
 import re
 import sys
