@@ -1,5 +1,4 @@
-import os
-
+import requests
 from flask import Flask, render_template, request, jsonify, make_response
 import json
 from werkzeug.exceptions import NotFound
@@ -63,16 +62,13 @@ def add_schedule():
         if str(day["date"]) == str(req["date"]):
             return make_response(jsonify({"error": "Date already exists"}), 500)
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    movies_path = os.path.join(base_dir, "..", "movie", "databases", "movies.json")
-
-    with open(movies_path, "r") as m:
-        movies_database = json.load(m)["movies"]
-
-    valid_movie_ids = [movie["id"] for movie in movies_database]
-    for movie_id in req["movies"]:
-        if movie_id not in valid_movie_ids:
-            return make_response(jsonify({"error": f"Invalid movie ID: {movie_id}"}), 500)
+    try:
+        for movie_id in req["movies"]:
+            resp = requests.get(f"http://localhost:3200/movies/{movie_id}")
+            if resp.status_code != 200:
+                return make_response(jsonify({"error": f"Invalid movie ID: {movie_id}"}), 500)
+    except Exception as e:
+        return make_response(jsonify({"error": "Movies service unavailable", "detail": str(e)}), 503)
 
     new_day = {
         "date": req["date"],
