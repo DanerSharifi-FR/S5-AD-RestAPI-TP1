@@ -84,7 +84,7 @@ def delete_schedule(date):
         if str(day["date"]) == str(date):
             schedule.remove(day)
             write(schedule)
-            return make_response(jsonify({"message": "Date deleted"}), 200)
+            return make_response(jsonify(day), 200)
     return make_response(jsonify({"error": "Date not found"}), 500)
 
 
