@@ -2,18 +2,20 @@ import requests
 from flask import Flask, render_template, request, jsonify, make_response
 import json
 from werkzeug.exceptions import NotFound
+import os
 
 app = Flask(__name__)
 
 PORT = 3202
 HOST = '0.0.0.0'
 
-with open('{}/databases/times.json'.format("."), "r") as jsf:
+script_dir = os.path.dirname(os.path.abspath(__file__))
+with open(f'{script_dir}/databases/times.json', "r") as jsf:
     schedule = json.load(jsf)["schedule"]
 
 
 def write(schedule):
-    with open('{}/databases/times.json'.format("."), 'w') as f:
+    with open(f'{script_dir}/databases/times.json', 'w') as f:
         full = {}
         full['schedule'] = schedule
         json.dump(full, f)

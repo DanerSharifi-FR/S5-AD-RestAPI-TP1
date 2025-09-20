@@ -2,19 +2,20 @@ from flask import Flask, request, jsonify, make_response
 import json
 import sys
 from werkzeug.exceptions import NotFound
+import os
 
 app = Flask(__name__)
 
 PORT = 3200
 HOST = '0.0.0.0'
 
-with open('{}/databases/movies.json'.format("."), 'r') as jsf:
+script_dir = os.path.dirname(os.path.abspath(__file__))
+with open(f'{script_dir}/databases/movies.json', 'r') as jsf:
     movies = json.load(jsf)["movies"]
-    print(movies)
 
 
 def write(movies):
-    with open('{}/databases/movies.json'.format("."), 'w') as f:
+    with open(f'{script_dir}/databases/movies.json', 'w') as f:
         full = {}
         full['movies'] = movies
         json.dump(full, f)

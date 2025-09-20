@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, make_response
 import requests
 import json
 from werkzeug.exceptions import NotFound
-
+import os
 
 
 app = Flask(__name__)
@@ -10,14 +10,15 @@ app = Flask(__name__)
 PORT = 3203
 HOST = '0.0.0.0'
 
-with open('{}/databases/users.json'.format("."), "r") as jsf:
-   users = json.load(jsf)["users"]
+script_dir = os.path.dirname(os.path.abspath(__file__))
+with open(f'{script_dir}/databases/users.json', "r") as jsf:
+    users = json.load(jsf)["users"]
 
 
 def write(users):
-    with open('{}/databases/users.json'.format("."), 'w') as f:
+    with open(f'{script_dir}/databases/users.json', 'w') as f:
         full = {}
-        full['movies'] = users
+        full['users'] = users
         json.dump(full, f)
 
 @app.route("/", methods=['GET'])
