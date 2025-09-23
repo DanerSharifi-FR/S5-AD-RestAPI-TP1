@@ -26,27 +26,6 @@ def home():
     return "<h1 style='color:blue'>Welcome to the Showtime service!</h1>"
 
 
-'''
-Schedule format:
-{
-  "schedule": [
-    {
-      "date":"20151130",
-      "movies":[
-        "720d006c-3a57-4b6a-b18f-9b713b073f3c",
-        "a8034f44-aee4-44cf-b32c-74cf452aaaae",
-        "39ab85e5-5e8e-4dc5-afea-65dc368bd7ab"
-      ]
-    },
-    ...
-    ]
-}
-
-this endpoint returns the list of movies for a given date
-we will code the CRD operations
-'''
-
-
 @app.route("/schedule/<date>", methods=['GET'])
 def get_schedule_bydate(date):
     for day in schedule:
