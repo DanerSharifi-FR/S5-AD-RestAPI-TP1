@@ -34,7 +34,7 @@ def auth(req_body, url_userid):
         return make_response(jsonify({"error": "Invalid user_id"}), 401)
 
     payload = resp.json()
-    is_admin = bool(payload.get("is_admin") or payload.get("role") == "admin")
+    is_admin = bool(payload.get("is_admin"))
 
     if not is_admin and str(req_body["user_id"]) != str(url_userid):
         return make_response(jsonify({"error": "Forbidden"}), 403)
