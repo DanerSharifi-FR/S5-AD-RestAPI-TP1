@@ -1,7 +1,32 @@
 services:
+  mongo:
+    image: mongo:6
+    container_name: mongo-rest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  user:
+    build:
+      context: .
+      dockerfile: user/Dockerfile
+    container_name: user-rest
+    environment:
+      - USE_MONGO=0
+      - MONGO_URI=mongodb://mongo-rest:27017
+      - MONGO_DB_NAME=cinema_rest
+    ports:
+      - "3203:3203"
+    depends_on:
+      - mongo
+    volumes:
+      - ./user/databases:/app/user/databases
+
   movie:
     build: ./movie/
     ports:
       - "3200:3200"
-  # to continue
 
+volumes:
+  mongo_data:

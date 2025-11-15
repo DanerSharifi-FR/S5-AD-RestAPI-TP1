@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, jsonify, make_response
-import requests
 import json
 from werkzeug.exceptions import NotFound
 import os
@@ -96,9 +95,10 @@ def del_user(userid):
             write(users)
             return make_response(jsonify(user),200)
 
-    res = make_response(jsonify({"error":"user ID not found"}),500)
+    res = make_response(jsonify({"error":"user ID not found, "+str(USE_MONGO)}),500)
     return res
 
 if __name__ == "__main__":
-   print("Server running in port %s"%(PORT))
+   print("Server running in port TEST %s"%(PORT))
+   print(f"[repository] USE_MONGO = {USE_MONGO}, MONGO_URI = {MONGO_URI}, DB = {MONGO_DB_NAME}")
    app.run(host=HOST, port=PORT)
