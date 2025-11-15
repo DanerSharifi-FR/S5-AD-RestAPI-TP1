@@ -12,21 +12,32 @@ services:
       context: .
       dockerfile: user/Dockerfile
     container_name: user-rest
-    environment:
-      - USE_MONGO=0
-      - MONGO_URI=mongodb://mongo-rest:27017
-      - MONGO_DB_NAME=cinema_rest
     ports:
       - "3203:3203"
     depends_on:
       - mongo
     volumes:
       - ./user/databases:/app/user/databases
-
+    environment:
+      - MONGO_URI=${MONGO_URI_DOCKER}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - USE_MONGO=${USE_MONGO}
+  
   movie:
-    build: ./movie/
+    build:
+      context: .
+      dockerfile: movie/Dockerfile
+    container_name: movie-rest
     ports:
       - "3200:3200"
+    depends_on:
+      - mongo
+    volumes:
+      - ./movie/databases:/app/movie/databases
+    environment:
+      - MONGO_URI=${MONGO_URI_DOCKER}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - USE_MONGO=${USE_MONGO}
 
 volumes:
   mongo_data:

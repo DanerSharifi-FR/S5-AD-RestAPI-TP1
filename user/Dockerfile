@@ -1,8 +1,6 @@
 # image plus légère que "python"
 FROM python:3.10-slim
 
-ENV PYTHONUNBUFFERED=1
-
 # On bosse depuis /app (où il y aura tout le projet)
 WORKDIR /app
 
