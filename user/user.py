@@ -3,6 +3,9 @@ import requests
 import json
 from werkzeug.exceptions import NotFound
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from config import USE_MONGO, MONGO_URI, MONGO_DB_NAME, USER_SERVICE_URL, SCHEDULE_SERVICE_URL, MOVIE_SERVICE_URL, BOOKING_SERVICE_URL
 
 
 app = Flask(__name__)
