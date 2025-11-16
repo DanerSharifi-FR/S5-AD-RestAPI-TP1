@@ -49,5 +49,21 @@ services:
       - MONGO_DB_NAME=${MONGO_DB_NAME}
       - USE_MONGO=${USE_MONGO}
       - MOVIE_SERVICE_URL=${MOVIE_SERVICE_URL_DOCKER}
+
+  booking:
+    build:
+      context: .
+      dockerfile: booking/Dockerfile
+    container_name: booking-rest
+    ports:
+      - "3201:3201"
+    volumes:
+      - ./booking/databases:/app/booking/databases
+    environment:
+      - MONGO_URI=${MONGO_URI_DOCKER}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - USE_MONGO=${USE_MONGO}
+      - USER_SERVICE_URL=${USER_SERVICE_URL_DOCKER}
+      - SCHEDULE_SERVICE_URL=${SCHEDULE_SERVICE_URL_DOCKER}
 volumes:
   mongo_data:
