@@ -14,8 +14,6 @@ services:
     container_name: user-rest
     ports:
       - "3203:3203"
-    depends_on:
-      - mongo
     volumes:
       - ./user/databases:/app/user/databases
     environment:
@@ -30,8 +28,6 @@ services:
     container_name: movie-rest
     ports:
       - "3200:3200"
-    depends_on:
-      - mongo
     volumes:
       - ./movie/databases:/app/movie/databases
     environment:
@@ -39,5 +35,19 @@ services:
       - MONGO_DB_NAME=${MONGO_DB_NAME}
       - USE_MONGO=${USE_MONGO}
 
+  schedule:
+    build:
+      context: .
+      dockerfile: schedule/Dockerfile
+    container_name: schedule-rest
+    ports:
+      - "3202:3202"
+    volumes:
+      - ./schedule/databases:/app/schedule/databases
+    environment:
+      - MONGO_URI=${MONGO_URI_DOCKER}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - USE_MONGO=${USE_MONGO}
+      - MOVIE_SERVICE_URL=${MOVIE_SERVICE_URL_DOCKER}
 volumes:
   mongo_data:

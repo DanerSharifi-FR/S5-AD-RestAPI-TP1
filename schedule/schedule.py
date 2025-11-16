@@ -1,72 +1,91 @@
 import requests
-from flask import Flask, render_template, request, jsonify, make_response
-import json
+from flask import Flask, request, jsonify, make_response
 from werkzeug.exceptions import NotFound
 import os
+import sys
+
+# allow imports from project root (config, etc.)
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from repository import (
+    get_all_schedule,
+    get_schedule_by_date,
+    add_schedule_entry,
+    delete_schedule_by_date,
+)
+from config import MOVIE_SERVICE_URL
 
 app = Flask(__name__)
 
 PORT = 3202
-HOST = '0.0.0.0'
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-with open(f'{script_dir}/databases/times.json', "r") as jsf:
-    schedule = json.load(jsf)["schedule"]
+HOST = "0.0.0.0"
 
 
-def write(schedule):
-    with open(f'{script_dir}/databases/times.json', 'w') as f:
-        full = {}
-        full['schedule'] = schedule
-        json.dump(full, f)
-
-
-@app.route("/", methods=['GET'])
+@app.route("/", methods=["GET"])
 def home():
     return "<h1 style='color:blue'>Welcome to the Showtime service!</h1>"
 
 
-@app.route("/schedule/<date>", methods=['GET'])
+@app.route("/schedule/<date>", methods=["GET"])
 def get_schedule_bydate(date):
-    for day in schedule:
-        if str(day["date"]) == str(date):
-            res = make_response(jsonify(day), 200)
-            return res
-    return make_response(jsonify({"error": "Date not found"}), 500)
+    day = get_schedule_by_date(date)
+    if day is None:
+        return make_response(jsonify({"error": "Date not found"}), 500)
+    return make_response(jsonify(day), 200)
 
 
-@app.route("/schedule", methods=['POST'])
+@app.route("/schedule", methods=["GET"])
+def get_schedule_json():
+    schedule_list = get_all_schedule()
+    return make_response(jsonify(schedule_list), 200)
+
+
+@app.route("/schedule", methods=["POST"])
 def add_schedule():
-    req = request.get_json()
+    req = request.get_json() or {}
 
-    for day in schedule:
-        if str(day["date"]) == str(req["date"]):
-            return make_response(jsonify({"error": "Date already exists"}), 500)
+    date_value = req.get("date")
+    movies_ids = req.get("movies")
 
+    if not date_value or not isinstance(movies_ids, list):
+        return make_response(
+            jsonify({"error": "Missing or invalid 'date' or 'movies' field"}),
+            400,
+        )
+
+    # validation des films via le service movie
     try:
-        for movie_id in req["movies"]:
-            resp = requests.get(f"http://localhost:3200/movies/{movie_id}")
+        for movie_id in movies_ids:
+            resp = requests.get(f"{MOVIE_SERVICE_URL}/movies/{movie_id}")
             if resp.status_code != 200:
-                return make_response(jsonify({"error": f"Invalid movie ID: {movie_id}"}), 500)
+                return make_response(
+                    jsonify({"error": f"Invalid movie ID: {movie_id}"}),
+                    500,
+                )
     except Exception as e:
-        return make_response(jsonify({"error": "Movies service unavailable", "detail": str(e)}), 503)
+        return make_response(
+            jsonify({"error": "Movies service unavailable", "detail": str(e)}),
+            503,
+        )
 
     new_day = {
-        "date": req["date"],
-        "movies": req["movies"]
+        "date": date_value,
+        "movies": movies_ids,
     }
-    schedule.append(new_day)
-    write(schedule)
+
+    created = add_schedule_entry(new_day)
+    if created is None:
+        return make_response(jsonify({"error": "Date already exists"}), 500)
+
     return make_response(jsonify({"message": "Date added"}), 200)
 
-@app.route("/schedule/<date>", methods=['DELETE'])
+
+@app.route("/schedule/<date>", methods=["DELETE"])
 def delete_schedule(date):
-    for day in schedule:
-        if str(day["date"]) == str(date):
-            schedule.remove(day)
-            write(schedule)
-            return make_response(jsonify(day), 200)
-    return make_response(jsonify({"error": "Date not found"}), 500)
+    deleted = delete_schedule_by_date(date)
+    if deleted is None:
+        return make_response(jsonify({"error": "Date not found"}), 500)
+    return make_response(jsonify(deleted), 200)
 
 
 if __name__ == "__main__":
