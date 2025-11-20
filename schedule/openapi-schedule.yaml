@@ -1,0 +1,206 @@
+openapi: 3.1.1
+
+info:
+  title: API schedule
+  summary: API REST du microservice (planning de diffusion)
+  description: >
+    API REST du microservice pour la gestion du planning des séances
+    (dates associées à des identifiants de films du microservice Movie).
+  contacts:
+    - name: "Daner Sharifi"
+      email: "daner.sharifi@imt-atlantique.net"
+    - name: "Bastien Bouvet"
+      email: "bastien.bouvet@imt-atlantique.net"
+
+servers:
+  - url: http://localhost:3202
+    description: Serveur local Flask pour Schedule
+
+tags:
+  - name: developers
+    description: Points d'accès utilisés par les développeurs / frontend
+  - name: admins
+    description: Points d'accès réservés à l'administration du planning
+
+paths:
+  /:
+    get:
+      tags: [developers]
+      summary: Page d'accueil du service
+      operationId: getHomeSchedule
+      description: >
+        Renvoie une simple page HTML de bienvenue du service Schedule.
+      responses:
+        '200':
+          description: Page HTML de bienvenue
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "<h1 style='color:blue'>Welcome to the Showtime service!</h1>"
+
+  /schedule:
+    get:
+      tags: [developers]
+      summary: Récupérer le planning complet
+      operationId: listSchedule
+      description: >
+        Renvoie la base JSON complète des jours de projection avec la liste des
+        identifiants de films associés pour chaque date.
+      responses:
+        '200':
+          description: Liste complète des jours de projection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleList'
+
+    post:
+      tags: [admins]
+      summary: Ajouter un jour de projection
+      operationId: addScheduleDay
+      description: >
+        Ajoute une nouvelle entrée de planning pour une date donnée.
+        Les identifiants de films fournis doivent exister dans le microservice Movie.
+      requestBody:
+        required: true
+        description: Données de la journée de projection à créer.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleDay'
+      responses:
+        '201':
+          description: Date ajoutée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Date added"
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /schedule/{date}:
+    get:
+      tags: [developers]
+      summary: Récupérer le planning d'une date
+      operationId: getScheduleByDate
+      description: >
+        Renvoie les informations de planning (liste d'identifiants de films)
+        pour une date donnée.
+      parameters:
+        - $ref: '#/components/parameters/DatePath'
+      responses:
+        '200':
+          description: Planning trouvé pour la date donnée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleDay'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags: [admins]
+      summary: Supprimer le planning d'une date
+      operationId: deleteScheduleByDate
+      description: >
+        Supprime l'entrée de planning associée à une date donnée.
+      parameters:
+        - $ref: '#/components/parameters/DatePath'
+      responses:
+        '200':
+          description: Planning supprimé pour la date donnée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleDay'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+components:
+  schemas:
+    ScheduleDay:
+      type: object
+      required: [date, movies]
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date du planning au format YYYY-MM-DD.
+          example: "2025-11-20"
+        movies:
+          type: array
+          description: Liste des identifiants de films programmés pour cette date.
+          items:
+            type: string
+          example: ["39ab85e5-5e8e-4dc5-afea-65dc368bd7ab", "f2b80b5f-6c90-4a7c-9f9c-123456789abc"]
+
+    ScheduleList:
+      type: object
+      required: [schedule]
+      properties:
+        schedule:
+          type: array
+          description: Liste des jours de projection.
+          items:
+            $ref: '#/components/schemas/ScheduleDay'
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Code d'erreur technique.
+          example: "SCHEDULE_NOT_FOUND"
+        message:
+          type: string
+          description: Message lisible par un humain.
+          example: "Aucun planning trouvé pour la date fournie."
+
+  parameters:
+    DatePath:
+      name: date
+      in: path
+      required: true
+      description: Date concernée au format YYYY-MM-DD.
+      schema:
+        type: string
+        format: date
+
+  responses:
+    BadRequestError:
+      description: Requête invalide (champ manquant ou mal formé).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFoundError:
+      description: Ressource demandée introuvable (date inexistante).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ConflictError:
+      description: Conflit lors de la création (date déjà existante dans le planning).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ServiceUnavailableError:
+      description: Service Movie indisponible lors de la validation des films.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

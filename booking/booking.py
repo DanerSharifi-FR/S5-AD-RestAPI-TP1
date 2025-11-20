@@ -3,6 +3,7 @@ import requests
 from werkzeug.exceptions import NotFound
 import os
 import sys
+from flask_cors import CORS
 
 # allow imports from project root (config, etc.)
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -13,13 +14,12 @@ from repository import (
     add_booking,
     delete_booking_by_userid,
 )
-from config import USER_SERVICE_URL, SCHEDULE_SERVICE_URL
+from config import USER_SERVICE_URL, USER_PORT, SCHEDULE_SERVICE_URL, SCHEDULE_PORT, BOOKING_PORT, HOST
 
 app = Flask(__name__)
 
-PORT = 3201
-HOST = "0.0.0.0"
-
+# Autoriser Swagger UI (localhost:8080) à appeler notre API
+CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
 
 def auth(req_body, url_userid):
     """
@@ -34,7 +34,7 @@ def auth(req_body, url_userid):
     user_id = req_body["user_id"]
 
     try:
-        resp = requests.get(f"{USER_SERVICE_URL}/users/{user_id}")
+        resp = requests.get(f"{USER_SERVICE_URL}:{USER_PORT}/users/{user_id}")
     except Exception as e:
         return make_response(
             jsonify({"error": "Users service unavailable", "detail": str(e)}),
@@ -136,7 +136,7 @@ def add_booking_route():
                 )
 
             # Check que la date existe dans schedule
-            resp = requests.get(f"{SCHEDULE_SERVICE_URL}/schedule/{date_value}")
+            resp = requests.get(f"{SCHEDULE_SERVICE_URL}:{SCHEDULE_PORT}/schedule/{date_value}")
             if resp.status_code != 200:
                 return make_response(
                     jsonify(
@@ -210,5 +210,5 @@ def home():
 
 
 if __name__ == "__main__":
-    print("Server running in port %s" % (PORT))
-    app.run(host=HOST, port=PORT)
+    print("Server running in port %s" % (BOOKING_PORT))
+    app.run(host=HOST, port=BOOKING_PORT)

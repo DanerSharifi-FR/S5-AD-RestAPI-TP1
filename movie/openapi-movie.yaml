@@ -1,0 +1,261 @@
+openapi: 3.1.1
+
+info:
+  title: API Movie
+  summary: API REST du microservice Movie
+  description: >
+    API REST du microservice Movie pour la gestion d'une petite base de
+    films dans le cadre du TP d'architectures distribuées.
+  contacts:
+    - name: "Daner Sharifi"
+      email: "daner.sharifi@imt-atlantique.net"
+    - name: "Bastien Bouvet"
+      email: "bastien.bouvet@imt-atlantique.net"
+
+
+servers:
+  - url: http://localhost:3200
+    description: Serveur local Flask pour Movie
+
+tags:
+  - name: developers
+    description: Points d'accès utilisés par les développeurs / frontend
+  - name: admins
+    description: Points d'accès réservés à l'administration du catalogue
+
+paths:
+  /:
+    get:
+      tags: [developers]
+      summary: Page d'accueil du service
+      operationId: getHome
+      description: >
+        Renvoie une simple page HTML de bienvenue du service Movie.
+      responses:
+        '200':
+          description: Page HTML de bienvenue
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "<h1 style='color:blue'>Welcome to the Movie service!</h1>"
+
+  /json:
+    get:
+      tags: [developers]
+      summary: Récupérer la base JSON complète des films
+      operationId: listMoviesJson
+      description: >
+        Renvoie la base JSON complète des films telle qu'elle est stockée
+        dans le fichier de données.
+      responses:
+        '200':
+          description: Liste complète des films
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieList'
+
+  /movies/{movieId}:
+    get:
+      tags: [developers]
+      summary: Récupérer un film par son identifiant
+      operationId: getMovieById
+      description: >
+        Renvoie la description d'un film à partir de son identifiant.
+      parameters:
+        - $ref: '#/components/parameters/MovieIdPath'
+      responses:
+        '200':
+          description: Film trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    post:
+      tags: [admins]
+      summary: Créer un nouveau film
+      operationId: createMovie
+      description: >
+        Ajoute un nouveau film dans la base. L'identifiant passé dans le
+        chemin doit être unique.
+      parameters:
+        - $ref: '#/components/parameters/MovieIdPath'
+      requestBody:
+        required: true
+        description: Données du film à créer.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Movie'
+      responses:
+        '201':
+          description: Film créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+    delete:
+      tags: [admins]
+      summary: Supprimer un film
+      operationId: deleteMovie
+      description: >
+        Supprime un film existant à partir de son identifiant.
+      parameters:
+        - $ref: '#/components/parameters/MovieIdPath'
+      responses:
+        '200':
+          description: Film supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /movies/{movieId}/{rate}:
+    put:
+      tags: [admins]
+      summary: Mettre à jour la note d'un film
+      operationId: updateMovieRating
+      description: >
+        Met à jour la note (rating) d'un film identifié par son identifiant.
+      parameters:
+        - $ref: '#/components/parameters/MovieIdPath'
+        - $ref: '#/components/parameters/MovieRatePath'
+      responses:
+        '200':
+          description: Film mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /moviesbytitle:
+    get:
+      tags: [developers]
+      summary: Récupérer un film par son titre
+      operationId: getMovieByTitle
+      description: >
+        Renvoie les informations d'un film à partir de son titre exact.
+      parameters:
+        - in: query
+          name: title
+          description: Titre du film à rechercher.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Film correspondant au titre fourni
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+components:
+  schemas:
+    Movie:
+      type: object
+      required: [id, title, rating, director]
+      properties:
+        id:
+          type: string
+          description: Identifiant unique du film.
+          example: "39ab85e5-5e8e-4dc5-afea-65dc368bd7ab"
+        title:
+          type: string
+          description: Titre du film.
+          example: "The Martian"
+        rating:
+          type: integer
+          description: Note du film sur 10.
+          minimum: 0
+          maximum: 10
+          example: 7
+        director:
+          type: string
+          description: Nom du réalisateur ou de la réalisatrice.
+          example: "Ridley Scott"
+
+    MovieList:
+      type: object
+      required: [movies]
+      properties:
+        movies:
+          type: array
+          description: Liste des films disponibles.
+          items:
+            $ref: '#/components/schemas/Movie'
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Code d'erreur technique.
+          example: "MOVIE_NOT_FOUND"
+        message:
+          type: string
+          description: Message lisible par un humain.
+          example: "Aucun film trouvé pour l'identifiant fourni."
+
+  parameters:
+    MovieIdPath:
+      name: movieId
+      in: path
+      required: true
+      description: Identifiant du film.
+      schema:
+        type: string
+
+    MovieRatePath:
+      name: rate
+      in: path
+      required: true
+      description: Nouvelle note du film (0 à 10).
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 10
+
+  responses:
+    BadRequestError:
+      description: Requête invalide (paramètre manquant ou mal formé).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFoundError:
+      description: Ressource demandée introuvable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ConflictError:
+      description: Conflit lors de la création (ressource déjà existante).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

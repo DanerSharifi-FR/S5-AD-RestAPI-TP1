@@ -47,6 +47,12 @@
       "rating": 1.2,
       "director": "Someone",
       "id": "xxx"
+    },
+    {
+      "title": "Test2",
+      "rating": 2.7,
+      "director": "Someone2",
+      "id": "720d006c-3a57-9fg5-b18f-12dkgnsmf41d"
     }
   ]
 }

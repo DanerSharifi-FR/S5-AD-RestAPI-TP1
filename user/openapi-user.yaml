@@ -1,0 +1,259 @@
+openapi: 3.1.1
+
+info:
+  title: API User
+  summary: API REST du microservice User
+  description: >
+    API REST du microservice User pour la gestion des utilisateurs dans le cadre
+    du TP d'architectures distribuées.
+  contacts:
+    - name: "Daner Sharifi"
+      email: "daner.sharifi@imt-atlantique.net"
+    - name: "Bastien Bouvet"
+      email: "bastien.bouvet@imt-atlantique.net"
+
+servers:
+  - url: http://localhost:3203
+    description: Serveur local Flask pour User
+
+tags:
+  - name: developers
+    description: Points d'accès utilisés par les développeurs / frontend
+  - name: admins
+    description: Points d'accès réservés à l'administration des utilisateurs
+
+paths:
+  /:
+    get:
+      tags: [developers]
+      summary: Page d'accueil du service
+      operationId: getHomeUser
+      description: >
+        Renvoie une simple page HTML de bienvenue du service User.
+      responses:
+        '200':
+          description: Page HTML de bienvenue
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "<h1 style='color:blue'>Welcome to the User service!</h1>"
+
+  /json:
+    get:
+      tags: [developers]
+      summary: Récupérer la base JSON complète des utilisateurs
+      operationId: listUsersJson
+      description: >
+        Renvoie la base JSON complète des utilisateurs telle qu'elle est
+        stockée dans le fichier de données.
+      responses:
+        '200':
+          description: Liste complète des utilisateurs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+
+  /users/{userId}:
+    get:
+      tags: [developers]
+      summary: Récupérer un utilisateur par son identifiant
+      operationId: getUserById
+      description: >
+        Renvoie la description d'un utilisateur à partir de son identifiant.
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Utilisateur trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    post:
+      tags: [admins]
+      summary: Créer un nouvel utilisateur
+      operationId: createUser
+      description: >
+        Ajoute un nouvel utilisateur dans la base. L'identifiant passé dans le
+        chemin doit être unique.
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        description: Données de l'utilisateur à créer.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+    delete:
+      tags: [admins]
+      summary: Supprimer un utilisateur
+      operationId: deleteUser
+      description: >
+        Supprime un utilisateur existant à partir de son identifiant.
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Utilisateur supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /users/{userId}/{last_active}:
+    put:
+      tags: [admins]
+      summary: Mettre à jour la dernière activité d'un utilisateur
+      operationId: updateUserLastActive
+      description: >
+        Met à jour le champ "last_active" d'un utilisateur identifié par son
+        identifiant.
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/LastActivePath'
+      responses:
+        '200':
+          description: Utilisateur mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /usersbyname:
+    get:
+      tags: [developers]
+      summary: Récupérer un utilisateur par son nom
+      operationId: getUserByName
+      description: >
+        Renvoie les informations d'un utilisateur à partir de son nom.
+      parameters:
+        - in: query
+          name: name
+          description: Nom de l'utilisateur à rechercher.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Utilisateur correspondant au nom fourni
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+components:
+  schemas:
+    User:
+      type: object
+      required: [id, name, email, last_active]
+      properties:
+        id:
+          type: string
+          description: Identifiant unique de l'utilisateur.
+          example: "user-1234"
+        name:
+          type: string
+          description: Nom de l'utilisateur.
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: Adresse e-mail de l'utilisateur.
+          example: "john.doe@example.com"
+        last_active:
+          type: string
+          description: Dernière activité de l'utilisateur (format libre ou date-heure).
+          example: "2025-11-20T14:30:00Z"
+
+    UserList:
+      type: object
+      required: [users]
+      properties:
+        users:
+          type: array
+          description: Liste des utilisateurs disponibles.
+          items:
+            $ref: '#/components/schemas/User'
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Code d'erreur technique.
+          example: "USER_NOT_FOUND"
+        message:
+          type: string
+          description: Message lisible par un humain.
+          example: "Aucun utilisateur trouvé pour l'identifiant fourni."
+
+  parameters:
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      description: Identifiant de l'utilisateur.
+      schema:
+        type: string
+
+    LastActivePath:
+      name: last_active
+      in: path
+      required: true
+      description: Nouvelle valeur de la dernière activité de l'utilisateur.
+      schema:
+        type: string
+        example: "2025-11-20T14:30:00Z"
+
+  responses:
+    BadRequestError:
+      description: Requête invalide (paramètre manquant ou mal formé).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFoundError:
+      description: Ressource demandée introuvable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ConflictError:
+      description: Conflit lors de la création (utilisateur déjà existant).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

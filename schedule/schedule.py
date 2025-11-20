@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, make_response
 from werkzeug.exceptions import NotFound
 import os
 import sys
+from flask_cors import CORS
 
 # allow imports from project root (config, etc.)
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -13,13 +14,12 @@ from repository import (
     add_schedule_entry,
     delete_schedule_by_date,
 )
-from config import MOVIE_SERVICE_URL
+from config import MOVIE_SERVICE_URL, MOVIE_PORT, SCHEDULE_PORT, HOST
 
 app = Flask(__name__)
 
-PORT = 3202
-HOST = "0.0.0.0"
-
+# Autoriser Swagger UI (localhost:8080) à appeler notre API
+CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
 
 @app.route("/", methods=["GET"])
 def home():
@@ -56,7 +56,7 @@ def add_schedule():
     # validation des films via le service movie
     try:
         for movie_id in movies_ids:
-            resp = requests.get(f"{MOVIE_SERVICE_URL}/movies/{movie_id}")
+            resp = requests.get(f"{MOVIE_SERVICE_URL}:{MOVIE_PORT}/movies/{movie_id}")
             if resp.status_code != 200:
                 return make_response(
                     jsonify({"error": f"Invalid movie ID: {movie_id}"}),
@@ -89,5 +89,5 @@ def delete_schedule(date):
 
 
 if __name__ == "__main__":
-    print("Server running in port %s" % (PORT))
-    app.run(host=HOST, port=PORT)
+    print("Server running in port %s" % (SCHEDULE_PORT))
+    app.run(host=HOST, port=SCHEDULE_PORT)

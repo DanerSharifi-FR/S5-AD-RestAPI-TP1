@@ -1,0 +1,22 @@
+openapi: 3.1.1
+
+info:
+  title: UE-AD-A1 REST API
+  summary: REST microservices (movie, booking, schedule, user) built with Flask
+  description: >
+    This OpenAPI document describes the REST microservices developed in the
+    UE-AD-A1 course. The services expose operations to manage movies, users,
+    schedules and bookings.
+  contact:
+    name: Bastien Bouvet, Daner Sharifi
+    email: bastien.bouvet@imt-atlantique.net, daner.sharifi@imt-atlantique.net
+
+tags:
+  - name: movie
+    description: Operations related to movies
+  - name: booking
+    description: Operations related to bookings
+  - name: schedule
+    description: Operations related to schedules
+  - name: user
+    description: Operations related to users

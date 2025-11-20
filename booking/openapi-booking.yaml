@@ -1,0 +1,295 @@
+openapi: 3.1.1
+
+info:
+  title: API Booking
+  summary: API REST du microservice Booking
+  description: >
+    API REST du microservice Booking pour la gestion des réservations
+    (liens entre utilisateurs et séances de films) dans le cadre du TP
+    d'architectures distribuées.
+  contacts:
+    - name: "Daner Sharifi"
+      email: "daner.sharifi@imt-atlantique.net"
+    - name: "Bastien Bouvet"
+      email: "bastien.bouvet@imt-atlantique.net"
+
+servers:
+  - url: http://localhost:3201
+    description: Serveur local Flask pour Booking
+
+tags:
+  - name: developers
+    description: Points d'accès utilisés par les développeurs / frontend
+  - name: admins
+    description: Points d'accès réservés à l'administration des réservations
+
+paths:
+  /:
+    get:
+      tags: [developers]
+      summary: Page d'accueil du service
+      operationId: getHomeBooking
+      description: >
+        Renvoie une simple page HTML de bienvenue du service Booking.
+      responses:
+        '200':
+          description: Page HTML de bienvenue
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "<h1 style='color:blue'>Welcome to the Booking service!</h1>"
+
+  /booking:
+    get:
+      tags: [developers]
+      summary: Récupérer toutes les réservations
+      operationId: listBookings
+      description: >
+        Renvoie la liste complète des réservations. Utile principalement pour le debug
+        ou l'administration.
+      responses:
+        '200':
+          description: Liste complète des réservations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingList'
+
+    post:
+      tags: [admins]
+      summary: Créer une réservation pour un utilisateur
+      operationId: createBooking
+      description: >
+        Crée une réservation pour un utilisateur donné. Vérifie que :
+          - l'utilisateur existe dans le microservice User,
+          - il n'existe pas déjà de réservation pour cet utilisateur,
+          - les dates existent dans le microservice Schedule,
+          - les films demandés sont bien disponibles à ces dates.
+      requestBody:
+        required: true
+        description: Données de la réservation à créer.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingCreate'
+      responses:
+        '201':
+          description: Réservation créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Booking added"
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /booking/{userId}:
+    get:
+      tags: [developers]
+      summary: Récupérer la réservation d'un utilisateur
+      operationId: getBookingByUserId
+      description: >
+        Renvoie la réservation associée à un utilisateur donné.
+        Nécessite un body JSON d'authentification contenant "user_id".
+        Seul l'utilisateur lui-même ou un admin peut consulter cette réservation.
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        description: Données d'authentification (utilisateur courant).
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthBody'
+      responses:
+        '200':
+          description: Réservation trouvée pour l'utilisateur donné
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+    delete:
+      tags: [admins]
+      summary: Supprimer la réservation d'un utilisateur
+      operationId: deleteBookingByUserId
+      description: >
+        Supprime la réservation associée à un utilisateur donné.
+        Nécessite un body JSON d'authentification contenant "user_id".
+        Seul l'utilisateur lui-même ou un admin peut supprimer cette réservation.
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        description: Données d'authentification (utilisateur courant).
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthBody'
+      responses:
+        '200':
+          description: Réservation supprimée pour l'utilisateur donné
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+components:
+  schemas:
+    BookingDateEntry:
+      type: object
+      required: [date, movies]
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date de réservation au format YYYY-MM-DD.
+          example: "2025-11-20"
+        movies:
+          type: array
+          description: Liste des identifiants de films réservés pour cette date.
+          items:
+            type: string
+          example: ["39ab85e5-5e8e-4dc5-afea-65dc368bd7ab", "f2b80b5f-6c90-4a7c-9f9c-123456789abc"]
+
+    Booking:
+      type: object
+      required: [userid, dates]
+      properties:
+        userid:
+          type: string
+          description: Identifiant de l'utilisateur ayant fait la réservation.
+          example: "user-1234"
+        dates:
+          type: array
+          description: Liste des dates et films réservés.
+          items:
+            $ref: '#/components/schemas/BookingDateEntry'
+
+    BookingCreate:
+      type: object
+      required: [userid, dates]
+      properties:
+        userid:
+          type: string
+          description: Identifiant de l'utilisateur pour lequel créer la réservation.
+          example: "user-1234"
+        dates:
+          type: array
+          description: Liste des dates et films souhaités.
+          items:
+            $ref: '#/components/schemas/BookingDateEntry'
+
+    BookingList:
+      type: object
+      required: [bookings]
+      properties:
+        bookings:
+          type: array
+          description: Liste des réservations existantes.
+          items:
+            $ref: '#/components/schemas/Booking'
+
+    AuthBody:
+      type: object
+      required: [user_id]
+      properties:
+        user_id:
+          type: string
+          description: Identifiant de l'utilisateur authentifié (courant).
+          example: "user-1234"
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Code d'erreur technique.
+          example: "BOOKING_NOT_FOUND"
+        message:
+          type: string
+          description: Message lisible par un humain.
+          example: "Aucune réservation trouvée pour l'utilisateur fourni."
+
+  parameters:
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      description: Identifiant de l'utilisateur concerné par la réservation.
+      schema:
+        type: string
+
+  responses:
+    BadRequestError:
+      description: Requête invalide (champ manquant ou mal formé).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    UnauthorizedError:
+      description: Authentification invalide (user_id inexistant ou invalide).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ForbiddenError:
+      description: Accès refusé (l'utilisateur n'est pas autorisé à accéder à cette réservation).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFoundError:
+      description: Ressource demandée introuvable (réservation ou utilisateur inexistant).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ConflictError:
+      description: Conflit lors de la création (réservation déjà existante pour cet utilisateur).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ServiceUnavailableError:
+      description: Service externe indisponible (User ou Schedule).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

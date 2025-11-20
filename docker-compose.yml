@@ -3,7 +3,7 @@ services:
     image: mongo:6
     container_name: mongo-rest
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT}:${MONGO_PORT}"
     volumes:
       - mongo_data:/data/db
 
@@ -13,7 +13,7 @@ services:
       dockerfile: user/Dockerfile
     container_name: user-rest
     ports:
-      - "3203:3203"
+      - "${USER_PORT}:${USER_PORT}"
     volumes:
       - ./user/databases:/app/user/databases
     environment:
@@ -27,7 +27,7 @@ services:
       dockerfile: movie/Dockerfile
     container_name: movie-rest
     ports:
-      - "3200:3200"
+      - "${MOVIE_PORT}:${MOVIE_PORT}"
     volumes:
       - ./movie/databases:/app/movie/databases
     environment:
@@ -41,7 +41,7 @@ services:
       dockerfile: schedule/Dockerfile
     container_name: schedule-rest
     ports:
-      - "3202:3202"
+      - "${SCHEDULE_PORT}:${SCHEDULE_PORT}"
     volumes:
       - ./schedule/databases:/app/schedule/databases
     environment:
@@ -56,7 +56,7 @@ services:
       dockerfile: booking/Dockerfile
     container_name: booking-rest
     ports:
-      - "3201:3201"
+      - "${BOOKING_PORT}:${BOOKING_PORT}"
     volumes:
       - ./booking/databases:/app/booking/databases
     environment:

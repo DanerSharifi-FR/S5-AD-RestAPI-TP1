@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, make_response
 from werkzeug.exceptions import NotFound
 import os
 import sys
+from flask_cors import CORS
 
 # allow imports from project root (config, etc.)
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -14,17 +15,16 @@ from repository import (
     update_movie_rating,
     delete_movie,
 )
+from config import MOVIE_PORT, HOST
 
 app = Flask(__name__)
 
-PORT = 3200
-HOST = "0.0.0.0"
-
+# Autoriser Swagger UI (localhost:8080) à appeler notre API
+CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
 
 @app.route("/", methods=["GET"])
 def home():
     return "<h1 style='color:blue'>Welcome to the Movie service!</h1>"
-
 
 @app.route("/movies/<movieid>", methods=["GET"])
 def get_movie_byid(movieid):
@@ -91,5 +91,5 @@ def del_movie(movieid):
 
 
 if __name__ == "__main__":
-    print("Server running in port %s" % (PORT))
-    app.run(host=HOST, port=PORT)
+    print("Server running in port %s" % (MOVIE_PORT))
+    app.run(host=HOST, port=MOVIE_PORT)

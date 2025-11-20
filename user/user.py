@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, make_response
 from werkzeug.exceptions import NotFound
 import os
 import sys
-
+from flask_cors import CORS
 # allow imports from project root (config, etc.)
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -14,12 +14,12 @@ from repository import (
     update_user_last_active,
     delete_user,
 )
+from config import USER_PORT, HOST
 
 app = Flask(__name__)
 
-PORT = 3203
-HOST = "0.0.0.0"
-
+# Autoriser Swagger UI (localhost:8080) à appeler notre API
+CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
 
 @app.route("/", methods=["GET"])
 def home():
@@ -92,5 +92,5 @@ def del_user(userid):
 
 
 if __name__ == "__main__":
-    print("Server running in port %s" % (PORT))
-    app.run(host=HOST, port=PORT)
+    print("Server running in port %s" % (USER_PORT))
+    app.run(host=HOST, port=USER_PORT)

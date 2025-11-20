@@ -14,7 +14,7 @@ _db = None
 _movies_col = None
 
 if USE_MONGO:
-    _client = MongoClient(MONGO_URI)
+    _client = MongoClient(f"{MONGO_URI}")
     _db = _client[MONGO_DB_NAME]
     _movies_col = _db["movies"]
 

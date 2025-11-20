@@ -23,3 +23,13 @@ USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://localhost:3203")
 SCHEDULE_SERVICE_URL = os.getenv("SCHEDULE_SERVICE_URL", "http://localhost:3202")
 MOVIE_SERVICE_URL = os.getenv("MOVIE_SERVICE_URL", "http://localhost:3200")
 BOOKING_SERVICE_URL = os.getenv("BOOKING_SERVICE_URL", "http://localhost:3201")
+
+# Ports des services
+MONGO_PORT=os.getenv("MONGO_PORT", "27017")
+MOVIE_PORT=os.getenv("MOVIE_PORT", "3200")
+USER_PORT=os.getenv("USER_PORT", "3203")
+SCHEDULE_PORT=os.getenv("SCHEDULE_PORT", "3202")
+BOOKING_PORT=os.getenv("BOOKING_PORT", "3201")
+
+# Host de flask
+HOST=os.getenv("HOST", "0.0.0.0")

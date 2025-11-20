@@ -1,6 +1,7 @@
 # booking/repository.py
 import os
 import json
+from flask_cors import CORS
 
 from pymongo import MongoClient
 
