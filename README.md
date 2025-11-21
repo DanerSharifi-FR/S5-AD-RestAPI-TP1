@@ -11,7 +11,7 @@
   </a>
 </p>
 
-<p style="text-align: center">
+<p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-informational?style=flat-square" alt="Python 3.10+" />
   <img src="https://img.shields.io/badge/Flask-REST-success?style=flat-square" alt="Flask REST" />
   <img src="https://img.shields.io/badge/MongoDB-option-darkgreen?style=flat-square" alt="MongoDB option" />
