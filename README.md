@@ -2,7 +2,7 @@
 
 ---
 
-<p style="text-align: center">
+<p align="center">
   <a href="https://www.daner-sharifi.com">
     <img src="https://img.shields.io/badge/Daner%20SHARIFI-FIL A1-blue?style=for-the-badge" alt="Daner SHARIFI">
   </a>
